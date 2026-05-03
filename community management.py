@@ -1,200 +1,147 @@
-"""
-Community Data Processing System
-A simple system to manage community member records.
-Author: Rex AI
-"""
+# ================================
+# Community Management System
+# ================================
 
-# Global list to store community member records
-# Each record will be a dictionary
-community_members = []
+import json
+import os
+import re
 
-def clear_screen():
-    """Clears the terminal screen for a cleaner look."""
-    print("\n" * 2)
+DATA_FILE = "community_data.json"
 
-def display_menu():
-    """Displays the main menu options."""
-    print("=" * 50)
-    print("   COMMUNITY DATA PROCESSING SYSTEM")
-    print("=" * 50)
-    print("  [1] Add New Member")
-    print("  [2] View All Members")
-    print("  [3] Search Member")
-    print("  [4] Delete Member")
-    print("  [5] Exit")
-    print("=" * 50)
-
-def add_member():
-    """Adds a new member to the system."""
-    print("\n" + "=" * 40)
-    print("  ADD NEW MEMBER - FILL IN THE FORM")
-    print("=" * 40)
+def save_data():
+    """Save members to file"""
     try:
-        # Show a clear "form" style input
-        print("\n[FORM] Please fill in the following details:\n")
+        with open(DATA_FILE, "w") as file:
+            json.dump(community_members, file)
+    except:
+        print("Error saving data!")
 
-        member_id = input("  >>> MEMBER ID:     ")
-        if not member_id.strip():
-            print("\n  [!] ID cannot be empty!")
-            return
-
-        # Check if ID already exists
-        for member in community_members:
-            if member['id'] == member_id:
-                print(f"\n  [!] Error: Member with ID '{member_id}' already exists.")
-                return
-
-        name = input("  >>> NAME:          ")
-        if not name.strip():
-            print("\n  [!] Name cannot be empty!")
-            return
-
-        age = input("  >>> AGE:           ")
-        if not age.strip():
-            print("\n  [!] Age cannot be empty!")
-            return
-
-        email = input("  >>> EMAIL:         ")
-        if not email.strip():
-            print("\n  [!] Email cannot be empty!")
-            return
-
-        # Create a dictionary for the new member
-        new_member = {
-            'id': member_id,
-            'name': name,
-            'age': age,
-            'email': email
-        }
-
-        # Append to the global list
-        community_members.append(new_member)
-
-        print("\n" + "=" * 40)
-        print("  [SUCCESS] Member added successfully!")
-        print("=" * 40)
-        print(f"\n  Name:    {name}")
-        print(f"  ID:      {member_id}")
-        print(f"  Age:     {age}")
-        print(f"  Email:   {email}")
-        print("\n  Press ENTER to continue...")
-        input()
-
-    except Exception as e:
-        print(f"\n  [!] An error occurred: {e}")
-        input("  Press ENTER to continue...")
-
-def view_members():
-    """Displays all members in the system."""
-    print("\n" + "=" * 60)
-    print("  VIEW ALL MEMBERS")
-    print("=" * 60)
-
-    if not community_members:
-        print("\n  No records found. Add some members first!")
-    else:
-        print(f"\n  Total Members: {len(community_members)}\n")
-        print("  " + "-" * 55)
-        print(f"  {'ID':<10} {'NAME':<20} {'AGE':<5} {'EMAIL':<25}")
-        print("  " + "-" * 55)
-
-        # Iterate through the list and print each dictionary's values
-        for member in community_members:
-            print(f"  {member['id']:<10} {member['name']:<20} {member['age']:<5} {member['email']:<25}")
-        print("  " + "-" * 55)
-
-    print("\n  Press ENTER to continue...")
-    input()
-
-def search_member():
-    """Searches for a member by ID or Name."""
-    print("\n" + "=" * 40)
-    print("  SEARCH MEMBER")
-    print("=" * 40)
-
-    search_term = input("\n  Enter Member ID or Name to search: ").strip()
-
-    if not search_term:
-        print("\n  [!] Search term cannot be empty!")
-        return
-
-    search_term = search_term.lower()
-    found = False
-
-    for member in community_members:
-        if search_term == member['id'].lower() or search_term in member['name'].lower():
-            if not found:
-                print(f"\n  {'ID':<10} {'NAME':<20} {'AGE':<5} {'EMAIL':<25}")
-                print("  " + "-" * 55)
-                found = True
-            print(f"  {member['id']:<10} {member['name']:<20} {member['age']:<5} {member['email']:<25}")
-
-    if not found:
-        print(f"\n  [!] No matching records found for '{search_term}'.")
-    else:
-        print("  " + "-" * 55)
-
-    print("\n  Press ENTER to continue...")
-    input()
-
-def delete_member():
-    """Deletes a member by ID."""
-    print("\n" + "=" * 40)
-    print("  DELETE MEMBER")
-    print("=" * 40)
-
-    # Show existing members first
-    if not community_members:
-        print("\n  No records to delete. Add some members first!")
-        return
-
-    print("\n  Current Members:")
-    for member in community_members:
-        print(f"    - {member['id']}: {member['name']}")
-
-    member_id = input("\n  Enter Member ID to delete: ").strip()
-
-    if not member_id:
-        print("\n  [!] ID cannot be empty!")
-        return
-
+def load_data():
+    """Load members from file"""
     global community_members
-    initial_count = len(community_members)
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r") as file:
+                community_members = json.load(file)
+        except:
+            community_members = []
 
-    # Use list comprehension to filter out the member to be deleted
-    community_members = [m for m in community_members if m['id'] != member_id]
+def validate_email(email):
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email)
 
-    if len(community_members) < initial_count:
-        print(f"\n  [SUCCESS] Member with ID '{member_id}' deleted successfully.")
-    else:
-        print(f"\n  [!] Member with ID '{member_id}' not found.")
+def validate_age(age):
+    return age.isdigit() and 0 < int(age) < 120
 
-    print("\n  Press ENTER to continue...")
-    input()
+# ================================
+# UPDATE MEMBER FUNCTION
+# ================================
 
-def main():
-    """Main function to run the system loop."""
-    while True:
-        clear_screen()
-        display_menu()
-        choice = input("\n  Enter your choice (1-5): ").strip()
+def update_member():
+    print("\n" + "=" * 40)
+    print("  UPDATE MEMBER")
+    print("=" * 40)
 
-        if choice == '1':
-            add_member()
-        elif choice == '2':
-            view_members()
-        elif choice == '3':
-            search_member()
-        elif choice == '4':
-            delete_member()
-        elif choice == '5':
-            print("\n" + "=" * 40)
-            print("  Exiting the system. Goodbye!")
-            print("=" * 40)
-            break
-        else:
-            print("\n  [!] Invalid choice. Please enter a number between 1 and 5.")
-            input("  Press ENTER to try again...")
+    member_id = input("Enter Member ID to update: ").strip()
 
-if __name__ == "__main__":
-    main()
+    for member in community_members:
+        if member['id'] == member_id:
+            print(f"\nEditing {member['name']}")
+
+            new_name = input("New Name (leave blank to keep): ")
+            new_age = input("New Age (leave blank to keep): ")
+            new_email = input("New Email (leave blank to keep): ")
+
+            if new_name:
+                member['name'] = new_name
+
+            if new_age:
+                if validate_age(new_age):
+                    member['age'] = new_age
+                else:
+                    print("Invalid age!")
+
+            if new_email:
+                if validate_email(new_email):
+                    member['email'] = new_email
+                else:
+                    print("Invalid email!")
+
+            print("Member updated successfully!")
+            save_data()
+            return
+
+    print("Member not found!")
+
+# ================================
+# STATISTICS FUNCTION
+# ================================
+
+def show_statistics():
+    print("\n" + "=" * 40)
+    print("  SYSTEM STATISTICS")
+    print("=" * 40)
+
+    total = len(community_members)
+
+    if total == 0:
+        print("No data available.")
+        return
+
+    total_age = sum(int(m['age']) for m in community_members if m['age'].isdigit())
+    avg_age = total_age / total if total > 0 else 0
+
+    print(f"Total Members: {total}")
+    print(f"Average Age: {avg_age:.2f}")
+
+# ================================
+# EXPORT FUNCTION
+# ================================
+
+def export_to_txt():
+    try:
+        with open("members_export.txt", "w") as file:
+            for m in community_members:
+                file.write(f"{m['id']}, {m['name']}, {m['age']}, {m['email']}\n")
+        print("Data exported successfully!")
+    except:
+        print("Export failed!")
+
+# ================================
+# EXTENDED MENU
+# ================================
+
+def extended_menu():
+    print("\n" + "=" * 50)
+    print("  EXTRA OPTIONS")
+    print("=" * 50)
+    print("  [6] Update Member")
+    print("  [7] View Statistics")
+    print("  [8] Export Data")
+    print("=" * 50)
+
+# ================================
+# MODIFY MAIN LOOP (EXTEND ONLY)
+# ================================
+
+# ⚠️ Add this inside your main() loop WITHOUT removing existing ones
+
+"""
+elif choice == '6':
+    update_member()
+    input("Press ENTER to continue...")
+
+elif choice == '7':
+    show_statistics()
+    input("Press ENTER to continue...")
+
+elif choice == '8':
+    export_to_txt()
+    input("Press ENTER to continue...")
+"""
+
+# ================================
+# AUTO LOAD DATA ON START
+# ================================
+
+load_data()
